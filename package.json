@@ -1,0 +1,12 @@
+{
+  "name": "video_project_backened",
+  "version": "1.0.0",
+  "description": "Youtube Base Backened",
+  "license": "ISC",
+  "author": "Kaif Ahmad",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
