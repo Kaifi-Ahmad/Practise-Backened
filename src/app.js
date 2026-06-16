@@ -12,6 +12,10 @@ app.use(cors({
     methods:["GET","POST","DELETE","PUT","OPTIONS"]
 }))
 app.use(cookieParser())
+
+import healthCheckRouter from "./routes/healthcheck.routes.js"
+app.use("/api/v2/healthCheck",healthCheckRouter)
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
