@@ -1,15 +1,21 @@
 import dns from "node:dns";
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 import {connection} from "./db/index.js"
+import {app} from "./app.js"
 import dotenv from "dotenv"
-import express from "express"
 
 dotenv.config({path:"./.env"})
- const app=express()
  const port=process.env.PORT||3000
 
 
-connection()
+connection().then(()=> {
+    app.listen(port,()=> {
+        console.log(`App is listen at port ${port}`);
+    })
+}).catch((error) => {
+    console.error("Error: ",error);
+    process.exit(1)
+})
 
 
 // ;(async () => {
