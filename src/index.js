@@ -1,14 +1,21 @@
+import dotenv from "dotenv"
+
+dotenv.config()
+
+
 import dns from "node:dns";
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 import {connection} from "./db/index.js"
 import {app} from "./app.js"
-import dotenv from "dotenv"
+import { configureCloudnary } from "./utils/cloudinary.js";
 
-dotenv.config({path:"./.env"})
  const port=process.env.PORT||3000
 
 
 connection().then(()=> {
+
+configureCloudnary()
+
     app.listen(port,()=> {
         console.log(`App is listen at port ${port}`);
     })
