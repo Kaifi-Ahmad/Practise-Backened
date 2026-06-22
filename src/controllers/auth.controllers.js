@@ -5,7 +5,7 @@ import { uploadOnCloudnary } from "../utils/cloudinary.js";
 import { User } from "../models/user.models.js";
 import jwt from "jsonwebtoken";
 import { emailVerificationMailgenContent, sendMail } from "../utils/mail.js";
-import crypto from "crypto"
+import crypto from "crypto";
 
 const generateAccessAndRefreshToken = async (userId) => {
   const user = await User.findById(userId);
@@ -56,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     ),
   });
   console.log(unHashedToken);
-  
+
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
   );
@@ -161,29 +161,109 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const userEmailVerification=asyncHandler(async (req,res)=> {
-  
-  
-  const {verificationToken}=req.params
+const userEmailVerification = asyncHandler(async (req, res) => {
+  const { verificationToken } = req.params;
   console.log(verificationToken);
-  
-  if(!verificationToken){
-    throw new ApiError(422,"Verification Token is missing")
+
+  if (!verificationToken) {
+    throw new ApiError(422, "Verification Token is missing");
   }
-  const hashedToken=crypto.createHash("sha256").update(verificationToken).digest("hex")
-  const user=await User.findOne({
-    emailVerificationToken:hashedToken,
-    emailVerificationExpiry:{ $gt:Date.now()}
-  })
-  if(!user){
-    throw new ApiError(402,"Token is invalid or expire")
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(verificationToken)
+    .digest("hex");
+  const user = await User.findOne({
+    emailVerificationToken: hashedToken,
+    emailVerificationExpiry: { $gt: Date.now() },
+  });
+  if (!user) {
+    throw new ApiError(402, "Token is invalid or expire");
   }
 
-  user.emailVerificationToken=undefined
-  user.emailVerificationExpiry=undefined
-  user.isEmailVerified=true;
-  await user.save({validateBeforeSave:false})
-  return res.status(200).json(new ApiResponse(200,{isEmailVerified:true},"Email Verified SuccessFully"))
+  user.emailVerificationToken = undefined;
+  user.emailVerificationExpiry = undefined;
+  user.isEmailVerified = true;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { isEmailVerified: true },
+        "Email Verified SuccessFully"
+      )
+    );
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if(!oldPassword||!newPassword){
+    throw new ApiError(401,"oldPassword or newPassword is required")
+  }
+  if(oldPassword===newPassword){
+    throw new ApiError(402,"Old password should be different from new Password")
+  }
+  const user = await User.findById(req.user?._id);
+  const passwordChecker = await user.isPasswordCorrect(oldPassword);
+  if (!passwordChecker) {
+    throw new ApiError(400, "Invalid Password");
+  }
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password Change Successfully"));
+});
+
+const getUser=asyncHandler(async (req,res) => {
+  return res.status(200).json(new ApiResponse(200,req.user,"User fetch Successfully"))
 })
 
-export { registerUser, userLogin, logoutUser, refreshAccessToken,userEmailVerification };
+const updateDetails=asyncHandler(async (req,res) => {
+  const {email,fullName}=req.body
+  if(!email||!fullName){
+    throw new ApiError(402,"All details are required")
+  }
+  const user=await User.findByIdAndUpdate(req.user?._id,{$set:{email,fullName}},{new:true}).select("-password")
+  return res.status(200).json(new ApiResponse(200,user,"User detail update successfully"))
+})
+
+const updateAvatar=asyncHandler(async (req,res) => {
+  const avatarLocalPath=req.file?.path
+  if(!avatarLocalPath){
+    throw new ApiError(402,"Avatar is missing")
+  }
+  const avatar=await uploadOnCloudnary(avatarLocalPath)
+  if(!avatar){
+    throw new ApiError(409,"Error while uploading on cloudnairy")
+  }
+  const user=await  User.findByIdAndUpdate(req.user?._id,{$set:{avatar:avatar.url}},{new:true
+  }).select("-password")
+  return res.status(200).json(new ApiResponse(200,{user},"Avatar Update SuccessFully"))
+})
+const updateCoverImage=asyncHandler(async (req,res) => {
+  const coverImageLocalPath=req.file?.path
+  if(!coverImageLocalPath){
+    throw new ApiError(402,"coverImage is missing")
+  }
+  const coverImage=await uploadOnCloudnary(coverImageLocalPath)
+  if(!coverImage){
+    throw new ApiError(409,"Error while uploading on cloudnairy")
+  }
+  const user=await  User.findByIdAndUpdate(req.user?._id,{$set:{coverImage:coverImage.url}},{new:true
+  }).select("-password")
+  return res.status(200).json(new ApiResponse(200,{user},"Avatar Update SuccessFully"))
+})
+
+export {
+  registerUser,
+  userLogin,
+  logoutUser,
+  refreshAccessToken,
+  userEmailVerification,
+  changePassword,
+  getUser,
+  updateDetails,
+  updateAvatar,
+  updateCoverImage
+};
