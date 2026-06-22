@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { ApiError } from "../utils/api-error.js";
-import { uploadOnCloudnary } from "../utils/cloudinary.js";
+import { uploadOnCloudnary,deleteFromCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.models.js";
 import jwt from "jsonwebtoken";
 import { emailVerificationMailgenContent, sendMail } from "../utils/mail.js";
@@ -233,12 +233,19 @@ const updateAvatar=asyncHandler(async (req,res) => {
   if(!avatarLocalPath){
     throw new ApiError(402,"Avatar is missing")
   }
+  const existedUser=await User.findById(req.user?._id)
+  const oldAvatar=existedUser?.avatar
+
   const avatar=await uploadOnCloudnary(avatarLocalPath)
   if(!avatar){
     throw new ApiError(409,"Error while uploading on cloudnairy")
   }
   const user=await  User.findByIdAndUpdate(req.user?._id,{$set:{avatar:avatar.url}},{new:true
   }).select("-password")
+if(oldAvatar){
+  const publicId=oldAvatar.split("/").pop().split(".")[0]
+  await deleteFromCloudinary(publicId)
+}
   return res.status(200).json(new ApiResponse(200,{user},"Avatar Update SuccessFully"))
 })
 const updateCoverImage=asyncHandler(async (req,res) => {
@@ -246,13 +253,19 @@ const updateCoverImage=asyncHandler(async (req,res) => {
   if(!coverImageLocalPath){
     throw new ApiError(402,"coverImage is missing")
   }
+  const existedUser=await User.findById(req.user?._id)
+  const oldCoverImage=existedUser?.coverImage
   const coverImage=await uploadOnCloudnary(coverImageLocalPath)
   if(!coverImage){
     throw new ApiError(409,"Error while uploading on cloudnairy")
   }
   const user=await  User.findByIdAndUpdate(req.user?._id,{$set:{coverImage:coverImage.url}},{new:true
   }).select("-password")
-  return res.status(200).json(new ApiResponse(200,{user},"Avatar Update SuccessFully"))
+  if(oldCoverImage){
+  const publicId=oldCoverImage.split("/").pop().split(".")[0]
+  await deleteFromCloudinary(publicId)
+}
+  return res.status(200).json(new ApiResponse(200,{user},"Cover Image Update SuccessFully"))
 })
 
 export {
