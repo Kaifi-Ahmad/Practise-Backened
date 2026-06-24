@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 
 import fs from "fs"
-
+import {ApiError} from "./api-error.js"
 
 
 export const configureCloudnary=async()=>{
@@ -41,7 +41,7 @@ const deleteFromCloudinary=async (publicId) => {
         const deleteResult=await cloudinary.uploader.destroy(publicId)
         return deleteFromCloudinary        
     } catch (error) {
-        throw new Error("Failed to delete file from cloudinary")
+        throw new ApiError(409,"Failed to delete file from cloudinary")
     }
 }
 

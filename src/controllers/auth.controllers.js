@@ -16,7 +16,7 @@ const generateAccessAndRefreshToken = async (userId) => {
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
   user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
+   user.save({ validateBeforeSave: false });
   return { accessToken, refreshToken };
 };
 
@@ -45,7 +45,6 @@ const registerUser = asyncHandler(async (req, res) => {
     coverImage: coverImage?.url || "",
     fullName,
   });
-
   const { unHashedToken, hashedToken, tokenExpiry } =
     user.generateTemporaryToken();
   user.emailVerificationToken = hashedToken;
@@ -61,7 +60,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
   console.log(unHashedToken);
 
-  const createdUser = await User.findById(user._id).select(
+  const createdUser = await user.findById(user._id).select(
     "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
   );
   if (!createdUser) {
@@ -74,6 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const userLogin = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
+
 
   if (!(username || email)) {
     throw new ApiError(409, "Username or email is required");
@@ -223,7 +223,7 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  return res
+return res
     .status(200)
     .json(new ApiResponse(200, req.user, "User fetch Successfully"));
 });
