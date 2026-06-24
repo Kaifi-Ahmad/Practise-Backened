@@ -28,6 +28,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   const avatarLocalStorage = req.files?.avatar?.[0]?.path;
   const coverImageLoacalStorage = req.files?.coverImage?.[0]?.path;
+  console.log(avatarLocalStorage);
+  console.log(coverImageLoacalStorage);
+  
   if (!avatarLocalStorage) {
     throw new ApiError(400, "Avatar is required");
   }
@@ -58,9 +61,8 @@ const registerUser = asyncHandler(async (req, res) => {
       `${req.protocol}://${req.get("host")}/api/v2/users/verify-email/${unHashedToken}`
     ),
   });
-  console.log(unHashedToken);
 
-  const createdUser = await user.findById(user._id).select(
+  const createdUser = await User.findById(user._id).select(
     "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
   );
   if (!createdUser) {

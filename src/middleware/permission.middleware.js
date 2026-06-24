@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/async-handler.js";
 
 export const validateProjectPermission=(roles=[]) => 
     asyncHandler(async (req,res,next) => {
-        const {projectId}=req.body
+        const {projectId}=req.params
         if(!projectId){
             throw new ApiError(400,"Project Id is required")
         }
@@ -15,8 +15,9 @@ export const validateProjectPermission=(roles=[]) =>
               if(!project){
             throw new ApiError(404 ,"Project not found")
         }
-       const givenRole=project?.role
+       const givenRole=project?.roles
        req.user.role=givenRole
+       
        if(!roles.includes(givenRole)){
         throw new ApiError(422,"You have not permission to do this task")
        }

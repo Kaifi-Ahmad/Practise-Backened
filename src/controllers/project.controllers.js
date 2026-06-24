@@ -19,11 +19,14 @@ const createProject = asyncHandler(async (req, res) => {
     description,
     createdBy: new mongoose.Types.ObjectId(req.user._id),
   });
-  await ProjectMember.create({
+  const projectMember=await ProjectMember.create({
     user: new mongoose.Types.ObjectId(req.user._id),
     project: new mongoose.Types.ObjectId(project._id),
     roles: userRoleEnum.ADMIN,
   });
+  console.log(project._id);
+  console.log(projectMember._id);
+  
   return res
     .status(200)
     .json(new ApiResponse(200, project, "Project created successfully"));
@@ -143,7 +146,7 @@ const addMemberToProject = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(409, "User does not exist");
   }
-  ProjectMember.findOneAndUpdate(
+  await ProjectMember.findOneAndUpdate(
     {
       user: user._id,
       project: projectId,
@@ -151,10 +154,10 @@ const addMemberToProject = asyncHandler(async (req, res) => {
     {
       user: user._id,
       project: projectId,
-      role: role,
+      roles: role,
     },
     {
-      new: true,
+      returnDocument:"after",
       upsert: true,
     }
   );
@@ -216,21 +219,24 @@ const getProjectMembers = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, projectMember, "Member fetched Successfully"));
 });
 const updateMemberRole = asyncHandler(async (req, res) => {
+  console.log("Controller reached");
+console.log(req.body);
   const { projectId, userId } = req.params;
+
   const { newRole } = req.body;
   if (!availableUserRole.includes(newRole)) {
     throw new ApiError(422, "Role is invalid");
   }
   const projectMember = await ProjectMember.findOneAndUpdate(
     {
-      project: projectId,
-      user: userId,
+      project: new mongoose.Types.ObjectId(projectId),
+      user: new mongoose.Types.ObjectId(userId),
     },
     {
-      role: newRole,
+      roles: newRole,
     },
     {
-      new: true,
+      returnDocument: "after",
     }
   );
   if (!projectMember) {
