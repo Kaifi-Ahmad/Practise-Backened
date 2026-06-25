@@ -7,7 +7,8 @@ const userTaskSchema=new Schema({
         required:true
     },
     description:{
-        type:String
+        type:String,
+        required:true
     },
     project:{
         type:Schema.Types.ObjectId,
@@ -17,26 +18,16 @@ const userTaskSchema=new Schema({
     assignedTo:{
         type:Schema.Types.ObjectId,
         ref:"User",
-        required:true
     },
     assignedBy:{
          type:Schema.Types.ObjectId,
         ref:"User",
-        required:true
     },
     status:{
         type:String,
         enum:availableTaskStatus,
         default:taskStatusEnum.TODO
     },
-    attachment:{
-        type:[{
-            url:String,
-            mimetype:String,
-            size:Number
-        }],
-        default:[]
-    }
 },{
     timestamps:true
 })

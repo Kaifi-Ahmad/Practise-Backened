@@ -64,9 +64,24 @@ const addMemberProjectValidator = () => {
       .withMessage("Role is invalid"),
   ];
 };
+
+const createTaskValidator=() => {
+  return [
+    body("title").notEmpty().withMessage("Title is required").bail().trim(),
+    body("description").optional(),
+    body("status").notEmpty().withMessage("Status is required")
+  ]
+}
+const createSubTaskValidtor=() => {
+  return [
+    body("title").notEmpty().withMessage("Title is required").bail().trim(),
+  ]
+}
 export {
   registerUserValidator,
   loginUserValidation,
   createProjectValidator,
   addMemberProjectValidator,
+  createTaskValidator,
+createSubTaskValidtor
 };
